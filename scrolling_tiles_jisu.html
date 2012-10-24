@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>JavaScript Tile Map Scrolling</title> 
+    <style type="text/css">
+        body {
+            padding:0px;
+            margin:0px;           
+        }
+        #viewports {
+            position:absolute;
+            border:4px solid #000;
+            background-color:#3090C7;
+            width:640px;
+            height:384px;
+        }
+
+        .tileDiv {
+            width : 64px;
+            height: 64px;
+            border : 1px solid red;
+            position : absolute;
+        }
+
+      
+    </style> 
+    <script type="text/javascript" 
+        src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js">
+    </script> 
+</head>
+<body>
+    <!-- This div will contain the three viewports -->
+    <div id="viewports"></div>
+
+</body>
+</html> 
+    <script>
+
+	//1. tmx파일을 읽어들인다.
+	(function() {
+
+  
+var loadMap = function() {
+		var xmlRequest = $.ajax({
+			type : "GET",
+			url: "map1.tmx",
+			dataType : "xml"
+		});
+
+		var that = {};
+
+		var rtn = xmlRequest.done(function(data){
+			var tileCountsWidth	= 0;	//map에 들어있는 tile개수
+			var tileCountsHeight	= 0;	//map에 들어있는 tile개수
+			var tileWidthPixel	= 0;	//tile가로폭
+			var tileHeightPixel	= 0;	//tile가로폭
+			var originalImageWidth	= 0;    //원본 이미지의 폭(pixel)
+			var originalImageHeight = 0;    //원본 이미지의 높이(pixel)
+			var aMapData = [];
+
+
+			//variable for cache
+			var $mapInfo = $(data).find('map');
+			var $imageInfo = $(data).find('image');
+
+			that.tileCountsWidth	= $mapInfo.attr('width');
+			that.tileCountsHeight	= $mapInfo.attr('height');
+			that.tileWidthPixel	= $mapInfo.attr('tilewidth');
+			that.tileHeightPixel	= $mapInfo.attr('tileheight');
+			that.originalImageWidth	= $imageInfo.attr('width');
+			that.originalImageHeight= $imageInfo.attr('height');
+                        that.imageSrc           = $imageInfo.attr('source');
+			
+
+			//parse csv data
+			temp = $(data).find('layer');
+
+                        //각 data를 배열의 원소로 넣는다.(배열: aMapData)
+                        temp.each(function(index){
+				var aSplitMapData = $(this).find('data').text().split(","); //문자열을 파싱해서 배열로 넣기
+                                that.aMapData = aSplitMapData;
+			});
+
+                        tileController(that);
+		});
+
+	}
+
+        var tileController = function(oMapInfo) {
+            //타일 div를 생성하고, view에 추가한다.
+            makeViewLayout(oMapInfo);
+
+            //각 타일의 위치를 교정한다
+            arrangeTilesPosition();
+        }
+
+        //그림을 그릴 division을 생성한다.
+        var makeViewLayout = function(oMapInfo) {
+            //console.log(oMapInfo);
+         /* return value
+        aMapData: Array[512]
+        originalImageHeight: "320"
+        originalImageWidth: "512"
+        tileCountsHeight: "16"
+        tileCountsWidth: "32"
+        tileHeightPixel: "64"
+        tileWidthPixel: "64"
+        */
+            var tileWidth   = oMapInfo.tileWidthPixel;
+            var tileHeight  = oMapInfo.tileHeightPixel;
+            var imageSrc    = oMapInfo.imageSrc;
+            //var imageSrc    = "http://localhost/scrolling_tiles/" + oMapInfo.imageSrc;
+
+            //view에 표현할 수 있는 tile개수는 (11개 * 7개)
+            //todo. 필요하면 이 부분 계산
+            var nTileCountForView = 11*7;
+
+            for(var i = 0 ; i < nTileCountForView; i++) {
+                markupString = "<div class='tileDiv'>divtest</div>";
+                $('#viewports').append(markupString);
+            }
+
+            //배경이미지 삽입
+            $('.tileDiv').css("background-image" ,"url(tiles2.png)");
+            //$('.tileDiv').css("display","none");
+        }
+
+
+        //각 타일의 위치를 교정한다.
+        var arrangeTilesPosition = function() {
+            var tileDiv = $('.tileDiv');
+            for(var i = 0 ; i < tileDiv.length; i ++){
+
+                nTileXpos = (i % 11) * 64;
+                //jif(i == 0) nTileYpos = 
+                nTileYpos = Math.floor(i/11) * 64;
+
+                tileDiv[i].style.left = nTileXpos + "px";
+                tileDiv[i].style.top  = nTileYpos + "px";
+            }
+        }
+
+
+        // 출발 !
+        var mainController = function() {
+            var oMapInfo = loadMap();
+        }
+
+        mainController();
+
+
+})(); //end of wrapping function
+
+    </script>
